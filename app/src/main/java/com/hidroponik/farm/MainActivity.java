@@ -35,8 +35,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 cProg = progress * cStep;
-                nProg = cProg;
-                SetPt.setText("" + nProg);
+                SetPt.setText("" + cProg);
+
             }
 
             @Override
@@ -46,25 +46,19 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+
                 AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
                 alert.setTitle("Konfirmasi");
                 alert.setMessage("Ubah setpoint TDS menjadi " + SetPt.getText() + " PPM");
                 alert.setCancelable(false);
-                alert.setPositiveButton("Ya", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        SeekTds.setProgress(nProg);
-                        nProg = pProg;
-                        Toast.makeText(MainActivity.this, "Setpoint berhasil di perbaharui", Toast.LENGTH_SHORT).show();
-                    }
+                alert.setPositiveButton("Ya", (dialog, which) -> {
+                    pProg = cProg;
+                    Toast.makeText(MainActivity.this, "Setpoint berhasil di perbaharui", Toast.LENGTH_SHORT).show();
                 });
-                alert.setNegativeButton("Batal", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-//                        SetPt.setText("" + pProg);
-                        SeekTds.setProgress(pProg);
-                        Toast.makeText(MainActivity.this, "Setpoint batal di perbaharui", Toast.LENGTH_SHORT).show();
-                    }
+                alert.setNegativeButton("Batal", (dialog, which) -> {
+                    SetPt.setText("" + pProg);
+                    // TODO help for get the previous value and set the progress for seekbar
+                    Toast.makeText(MainActivity.this, "Setpoint batal di perbaharui", Toast.LENGTH_SHORT).show();
                 });
                 alert.show();
             }
