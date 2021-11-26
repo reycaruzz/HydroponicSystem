@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -30,7 +29,11 @@ public class MainActivity extends AppCompatActivity {
     private final DatabaseReference Pom_PhUp = db.getReference("pom_phup");
     private final DatabaseReference Pom_PhD = db.getReference("pom_phdn");
 
-    int cMax = 1400, cStep = 50, cProg, pProg, nProg;
+    int cMax = 1400;
+    int cStep = 50;
+    int cProg;
+    int pProg;
+    String nProg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,10 +73,11 @@ public class MainActivity extends AppCompatActivity {
                 alert.setCancelable(false);
                 alert.setPositiveButton("Ya", (dialog, which) -> {
                     pProg = cProg;
+                    Set_Pt.setValue(SetPt.getText());
                     Toast.makeText(MainActivity.this, "Setpoint berhasil di perbaharui", Toast.LENGTH_SHORT).show();
                 });
                 alert.setNegativeButton("Batal", (dialog, which) -> {
-                    SetPt.setText("" + pProg);
+                    SetPt.setText("" + nProg);
                     // TODO help for get the previous value and set the progress for seekbar
                     Toast.makeText(MainActivity.this, "Setpoint batal di perbaharui", Toast.LENGTH_SHORT).show();
                 });
@@ -117,7 +121,18 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Gagal membaca data suhu!" + error.toException(), Toast.LENGTH_SHORT).show();
             }
         });
-        Set_Pt.setValue(SetPt.getText());
+        Set_Pt.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String tb_pt = snapshot.getValue(String.class);
+                nProg = tb_pt;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(MainActivity.this, "Gagal membaca data setpoint TDS!" + error.toException(), Toast.LENGTH_SHORT).show();
+            }
+        });
         Pom_ABMix.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
