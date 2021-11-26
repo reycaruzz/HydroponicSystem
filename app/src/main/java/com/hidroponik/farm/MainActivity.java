@@ -1,5 +1,6 @@
 package com.hidroponik.farm;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,9 +10,25 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 public class MainActivity extends AppCompatActivity {
     private TextView SensorPpm, SensorPh, SensorSuhu, SetPt, PomABMix, PomAir, PomPhUp, PomPhD;
     private SeekBar SeekTds;
+
+    private final FirebaseDatabase db = FirebaseDatabase.getInstance();
+    private final DatabaseReference Sensor_Ppm = db.getReference("ppm_value");
+    private final DatabaseReference Sensor_Ph = db.getReference("ph_value");
+    private final DatabaseReference Sensor_Suhu = db.getReference("suhu_value");
+    private final DatabaseReference Set_Pt = db.getReference("setpointTDS");
+    private final DatabaseReference Pom_ABMix = db.getReference("pom_abmix");
+    private final DatabaseReference Pom_Air = db.getReference("pom_air");
+    private final DatabaseReference Pom_PhUp = db.getReference("pom_phup");
+    private final DatabaseReference Pom_PhD = db.getReference("pom_phdn");
 
     int cMax = 1400, cStep = 50, cProg, pProg, nProg;
 
@@ -61,6 +78,19 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Setpoint batal di perbaharui", Toast.LENGTH_SHORT).show();
                 });
                 alert.show();
+            }
+        });
+
+        Sensor_Ppm.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String tb_ppm = snapshot.getValue(String.class);
+                SensorPpm.setText(tb_ppm);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(MainActivity.this, "Gagal membaca data PPM!", Toast.LENGTH_SHORT).show();
             }
         });
     }
