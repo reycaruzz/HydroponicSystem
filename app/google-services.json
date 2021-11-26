@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "1066336848158",
+    "firebase_url": "https://hidroponik-5f127-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "hidroponik-5f127",
+    "storage_bucket": "hidroponik-5f127.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066336848158:android:9e2a28019357eb0dd9e10f",
+        "android_client_info": {
+          "package_name": "com.hidroponik.eb"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1066336848158-otjufscn4ndv9u0e6t6kj2j70uf3m9g7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhvgwRBTbYfq6cqGWD1Uo1caEz5zGB_8o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1066336848158-otjufscn4ndv9u0e6t6kj2j70uf3m9g7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066336848158:android:7ddae4c75c322b59d9e10f",
+        "android_client_info": {
+          "package_name": "com.hidroponik.farm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1066336848158-otjufscn4ndv9u0e6t6kj2j70uf3m9g7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhvgwRBTbYfq6cqGWD1Uo1caEz5zGB_8o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1066336848158-otjufscn4ndv9u0e6t6kj2j70uf3m9g7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
