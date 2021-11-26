@@ -324,6 +324,7 @@
                     android:orientation="horizontal"
                     android:progress="500"
                     android:progressTint="#009688"
+                    app:labelStyle="@style/tooltip"
                     android:thumb="@android:drawable/presence_online"
                     app:layout_constraintBottom_toBottomOf="@id/imageView4"
                     app:layout_constraintEnd_toEndOf="@id/imageView4"

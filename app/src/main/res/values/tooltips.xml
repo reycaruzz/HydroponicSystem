@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="tooltip" parent="Widget.MaterialComponents.Tooltip">
+        <item name="backgroundTint">@color/primary1</item>
+        <item name="android:visibility">visible</item>
+    </style>
+
+    <style name="tooltips" parent="Widget.MaterialComponents.Tooltip">
+        <item name="shapeAppearanceOverlay">@style/tooltipShOverlay</item>
+        <item name="backgroundTint">@color/primary1</item>
+        <item name="android:visibility">visible</item>
+    </style>
+
+    <style name="tooltipShOverlay">
+        <item name="cornerSize">50%</item>
+    </style>
+</resources>
