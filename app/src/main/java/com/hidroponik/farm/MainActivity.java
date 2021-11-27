@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -27,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private final DatabaseReference Pom_ABMix = db.getReference("pom_abmix");
     private final DatabaseReference Pom_Air = db.getReference("pom_air");
     private final DatabaseReference Pom_PhUp = db.getReference("pom_phup");
-    private final DatabaseReference Pom_PhD = db.getReference("pom_phdn");
+    private final DatabaseReference Pom_PhD = db.getReference("pom_phd");
 
     int cMax = 1400;
     int cStep = 50;
@@ -56,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 cProg = progress * cStep;
                 SetPt.setText("" + cProg);
-
             }
 
             @Override
@@ -74,10 +74,13 @@ public class MainActivity extends AppCompatActivity {
                 alert.setPositiveButton("Ya", (dialog, which) -> {
                     pProg = cProg;
                     Set_Pt.setValue(SetPt.getText());
-                    Toast.makeText(MainActivity.this, "Setpoint berhasil di perbaharui", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this,
+                            "Setpoint berhasil di perbaharui",
+                            Toast.LENGTH_SHORT).show();
                 });
                 alert.setNegativeButton("Batal", (dialog, which) -> {
                     SetPt.setText("" + nProg);
+                    SeekTds.setProgress(Integer.parseInt(nProg));
                     // TODO help for get the previous value and set the progress for seekbar
                     Toast.makeText(MainActivity.this, "Setpoint batal di perbaharui", Toast.LENGTH_SHORT).show();
                 });
@@ -137,7 +140,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_abmix = snapshot.getValue(String.class);
-                PomABMix.setText(tb_abmix);
+                if (tb_abmix.equals("H")) {
+                    PomABMix.setText("ON");
+                    PomABMix.setTextColor(Color.rgb(0, 255, 0));
+                } else if (tb_abmix.equals("L")) {
+                    PomABMix.setText("OFF");
+                    PomABMix.setTextColor(Color.rgb(255, 0, 0));
+                }
             }
 
             @Override
@@ -149,7 +158,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_air = snapshot.getValue(String.class);
-                PomAir.setText(tb_air);
+                if (tb_air.equals("H")) {
+                    PomAir.setText("ON");
+                    PomAir.setTextColor(Color.rgb(0, 255, 0));
+                } else if (tb_air.equals("L")) {
+                    PomAir.setText("OFF");
+                    PomAir.setTextColor(Color.rgb(255, 0, 0));
+                }
             }
 
             @Override
@@ -161,7 +176,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_phup = snapshot.getValue(String.class);
-                PomPhUp.setText(tb_phup);
+                if (tb_phup.equals("H")) {
+                    PomPhUp.setText("ON");
+                    PomPhUp.setTextColor(Color.rgb(0, 255, 0));
+                } else if (tb_phup.equals("L")) {
+                    PomPhUp.setText("OFF");
+                    PomPhUp.setTextColor(Color.rgb(255, 0, 0));
+                }
             }
 
             @Override
@@ -173,7 +194,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_phd = snapshot.getValue(String.class);
-                PomPhD.setText(tb_phd);
+                if(tb_phd.equals("H")) {
+                    PomPhD.setText("ON");
+                    PomPhD.setTextColor(Color.rgb(0, 255, 0));
+                } else if (tb_phd.equals("L")) {
+                    PomPhD.setText("OFF");
+                    PomPhD.setTextColor(Color.rgb(255, 0, 0));
+                }
             }
 
             @Override
