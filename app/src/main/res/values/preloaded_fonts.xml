@@ -6,5 +6,6 @@
         <item>@font/open_sans_condensed_bold</item>
         <item>@font/open_sans_condensed_light</item>
         <item>@font/open_sans_extrabold</item>
+        <item>@font/open_sans_italic</item>
     </array>
 </resources>
