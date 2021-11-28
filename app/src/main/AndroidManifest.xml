@@ -30,6 +30,10 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.HydroponicSystem"></activity>
 
+        <service android:name=".netService"
+            android:enabled="true"
+            android:exported="true"/>
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

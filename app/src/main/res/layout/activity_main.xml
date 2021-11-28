@@ -287,7 +287,7 @@
                     android:layout_marginBottom="65dp"
                     android:fontFamily="@font/open_sans_bold"
                     android:gravity="center_horizontal"
-                    android:text="0"
+                    android:text="200"
                     android:textAllCaps="true"
                     android:textColor="@color/black"
                     android:textSize="40sp"
@@ -662,6 +662,7 @@
                 android:layout_height="wrap_content">
 
                 <TextView
+                    android:id="@+id/lupdt"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/open_sans_italic"
