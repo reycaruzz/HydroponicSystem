@@ -86,9 +86,13 @@ public class MainActivity extends AppCompatActivity {
         binding.lupdt.setVisibility(View.GONE);
         binding.waktu.setVisibility(View.GONE);
         if(isOnline(getApplicationContext())) {
+            text1 = sP.getString(TEXT1, "");
+            Waktu.setText(text1);
             Set_Visibility_ON();
+            Toast.makeText(MainActivity.this, "Internet tersambung!", Toast.LENGTH_LONG).show();
         }else {
-            Set_Visibility_OFF();
+            LUdpt.setText("Gagal memperbaharui data!");
+            Toast.makeText(MainActivity.this, "Internet terputus!", Toast.LENGTH_LONG).show();
         }
 
 //        if(text1 == null) {
