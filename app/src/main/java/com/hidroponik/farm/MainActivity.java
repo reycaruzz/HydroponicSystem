@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.SeekBar;
@@ -17,7 +18,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView SensorPpm, SensorPh, SensorSuhu, SetPt, PomABMix, PomAir, PomPhUp, PomPhD;
+    private TextView SensorPpm, SensorPh, SensorSuhu, SetPt, PomABMix, PomAir, PomPhUp, PomPhD, waktu;
     private SeekBar SeekTds;
 
     private final FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -34,7 +35,11 @@ public class MainActivity extends AppCompatActivity {
     int cStep = 50;
     int cProg;
     int pProg;
-    String nProg;
+    int nProg;
+    private String text;
+    public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String TEXT = "text";
+    public static final String TEXT1 = "text1";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +56,11 @@ public class MainActivity extends AppCompatActivity {
         PomPhD = (TextView) findViewById(R.id.p_phdn);
         SeekTds = (SeekBar) findViewById(R.id.seek_ppm);
 
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        text = sharedPreferences.getString(TEXT, "");
+        SetPt.setText(text);
+        SeekTds.setProgress(Integer.parseInt(text) / cStep);
+
         SeekTds.setMax(cMax / cStep);
         SeekTds.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -61,27 +71,27 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
                 AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
                 alert.setTitle("Konfirmasi");
                 alert.setMessage("Ubah setpoint TDS menjadi " + SetPt.getText() + " PPM");
                 alert.setCancelable(false);
                 alert.setPositiveButton("Ya", (dialog, which) -> {
-                    pProg = cProg;
                     Set_Pt.setValue(SetPt.getText());
-                    Toast.makeText(MainActivity.this,
-                            "Setpoint berhasil di perbaharui",
-                            Toast.LENGTH_SHORT).show();
+                    SharedPreferences sP = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sP.edit();
+                    editor.putString(TEXT, SetPt.getText().toString());
+                    editor.apply();
+                    Toast.makeText(MainActivity.this, "Setpoint berhasil di perbaharui",Toast.LENGTH_SHORT).show();
                 });
                 alert.setNegativeButton("Batal", (dialog, which) -> {
-                    SetPt.setText("" + nProg);
-                    SeekTds.setProgress(Integer.parseInt(nProg));
-                    // TODO help for get the previous value and set the progress for seekbar
+                    SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+                    text = sharedPreferences.getString(TEXT, "");
+                    SetPt.setText(text);
+                    SeekTds.setProgress(Integer.parseInt(text) / cStep);
                     Toast.makeText(MainActivity.this, "Setpoint batal di perbaharui", Toast.LENGTH_SHORT).show();
                 });
                 alert.show();
@@ -128,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_pt = snapshot.getValue(String.class);
-                nProg = tb_pt;
+                SetPt.setText(tb_pt);
             }
 
             @Override
@@ -194,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_phd = snapshot.getValue(String.class);
-                if(tb_phd.equals("H")) {
+                if (tb_phd.equals("H")) {
                     PomPhD.setText("ON");
                     PomPhD.setTextColor(Color.rgb(0, 255, 0));
                 } else if (tb_phd.equals("L")) {
@@ -208,5 +218,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Gagal membaca data pompa pH down!" + error.toException(), Toast.LENGTH_SHORT).show();
             }
         });
+
     }
 }
