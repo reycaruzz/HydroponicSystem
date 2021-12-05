@@ -85,26 +85,15 @@ public class MainActivity extends AppCompatActivity {
 
         binding.lupdt.setVisibility(View.GONE);
         binding.waktu.setVisibility(View.GONE);
-        if(isOnline(getApplicationContext())) {
+        if (isOnline(getApplicationContext())) {
             text1 = sP.getString(TEXT1, "");
             Waktu.setText(text1);
             Set_Visibility_ON();
             Toast.makeText(MainActivity.this, "Internet tersambung!", Toast.LENGTH_LONG).show();
-        }else {
-            LUdpt.setText("Gagal memperbaharui data!");
+        } else {
+            Set_Visibility_OFF();
             Toast.makeText(MainActivity.this, "Internet terputus!", Toast.LENGTH_LONG).show();
         }
-
-//        if(text1 == null) {
-//            LUdpt.setVisibility(View.INVISIBLE);
-//            Waktu.setVisibility(View.INVISIBLE);
-//        } else {
-//            LUdpt.setVisibility(View.VISIBLE);
-//            Waktu.setVisibility(View.VISIBLE);
-//            updateWaktu();
-//            text1 = sP.getString(TEXT1, "");
-//            Waktu.setText(text1);
-//        }
 
         SeekTds.setMax(cMax / cStep);
         SeekTds.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
