@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">Hydroponic System</string>
     <string name="hydroponic_system">HYDROPONIC SYSTEM</string>
+    <string name="PompaON">ON</string>
+    <string name="PompaOFF">OFF</string>
 </resources>

@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -13,7 +15,9 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+//import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,14 +34,19 @@ import com.google.firebase.database.ValueEventListener;
 import com.hidroponik.farm.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     ActivityMainBinding binding;
-    public static final String BroadcastStringForAction = "checkinternet";
+    public static final String BroadcastStringForAction = "check internet";
 
-    private TextView SensorPpm, SensorPh, SensorSuhu, SetPt, PomABMix, PomAir, PomPhUp, PomPhD, Waktu, LUdpt;
+    private TextView SensorPpm, SensorPh, SensorSuhu, SetPt, PomABMix, PomAir, PomPhUp, PomPhD, Waktu;
+    private DatabaseHelper dbhelp;
     private SeekBar SeekTds;
+    //    private Button pindahData;
     private IntentFilter mif;
+
     private final FirebaseDatabase db = FirebaseDatabase.getInstance();
+
     private final DatabaseReference Sensor_Ppm = db.getReference("ppm_value");
     private final DatabaseReference Sensor_Ph = db.getReference("ph_value");
     private final DatabaseReference Sensor_Suhu = db.getReference("suhu_value");
@@ -50,7 +59,9 @@ public class MainActivity extends AppCompatActivity {
     int cMax = 1400;
     int cStep = 50;
     int cProg;
-    private String text, text1;
+    long id;
+
+    private String text;
     public static final String SHARED_PREFS = "sharedPrefs";
     public static final String TEXT = "text";
     public static final String TEXT1 = "text1";
@@ -61,17 +72,20 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        SensorPpm = (TextView) findViewById(R.id.ppm);
-        SensorPh = (TextView) findViewById(R.id.ph);
-        SensorSuhu = (TextView) findViewById(R.id.suhu);
-        SetPt = (TextView) findViewById(R.id.setpoint);
-        PomABMix = (TextView) findViewById(R.id.p_abmix);
-        PomAir = (TextView) findViewById(R.id.p_air);
-        PomPhUp = (TextView) findViewById(R.id.p_phup);
-        PomPhD = (TextView) findViewById(R.id.p_phdn);
-        SeekTds = (SeekBar) findViewById(R.id.seek_ppm);
-        Waktu = (TextView) findViewById(R.id.waktu);
-        LUdpt = (TextView) findViewById(R.id.lupdt);
+        dbhelp = new DatabaseHelper(this);
+        id = getIntent().getLongExtra(DatabaseHelper.COL_ID, 0);
+
+        SensorPpm = findViewById(R.id.ppm);
+        SensorPh = findViewById(R.id.ph);
+        SensorSuhu = findViewById(R.id.suhu);
+        SetPt = findViewById(R.id.setpoint);
+        PomABMix = findViewById(R.id.p_abmix);
+        PomAir = findViewById(R.id.p_air);
+        PomPhUp = findViewById(R.id.p_phup);
+        PomPhD = findViewById(R.id.p_phdn);
+        SeekTds = findViewById(R.id.seek_ppm);
+        Waktu = findViewById(R.id.waktu);
+//        pindahData = (Button) findViewById(R.id.btn1);
 
         SharedPreferences sP = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         text = sP.getString(TEXT, "");
@@ -86,13 +100,16 @@ public class MainActivity extends AppCompatActivity {
         binding.lupdt.setVisibility(View.GONE);
         binding.waktu.setVisibility(View.GONE);
         if (isOnline(getApplicationContext())) {
-            text1 = sP.getString(TEXT1, "");
+            String text1 = sP.getString(TEXT1, "");
             Waktu.setText(text1);
             Set_Visibility_ON();
             Toast.makeText(MainActivity.this, "Internet tersambung!", Toast.LENGTH_LONG).show();
+            Log.d(TAG, "Internet tersambung!");
         } else {
-            Set_Visibility_OFF();
+//            Set_Visibility_OFF();
+            Waktu.setText("Tidak terkoneksi internet!");
             Toast.makeText(MainActivity.this, "Internet terputus!", Toast.LENGTH_LONG).show();
+            Log.d(TAG, "Internet terputus");
         }
 
         SeekTds.setMax(cMax / cStep);
@@ -101,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 cProg = progress * cStep;
                 SetPt.setText("" + cProg);
+                Log.d(TAG, "Seekbar berubah : " + cProg);
             }
 
             @Override
@@ -109,20 +127,34 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+
                 AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
                 alert.setTitle("Konfirmasi");
                 alert.setMessage("Ubah setpoint TDS menjadi " + SetPt.getText() + " PPM");
                 alert.setCancelable(false);
                 alert.setPositiveButton("Ya", (dialog, which) -> {
-                    Set_Pt.setValue(SetPt.getText());
+                    if (isOnline(getApplicationContext())) {
+                        Set_Pt.setValue(SetPt.getText());
+                        String setpint = (String) SetPt.getText();
+                        ContentValues values = new ContentValues();
+                        values.put(DatabaseHelper.COL_SETPOINT, setpint);
+                        dbhelp.insertData(values);
+                        Log.e(TAG, "setpoint berubah :");
 
-                    SharedPreferences sP = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sP.edit();
-                    editor.putString(TEXT, SetPt.getText().toString());
-                    editor.apply();
+                        SharedPreferences sP = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sP.edit();
+                        editor.putString(TEXT, SetPt.getText().toString());
+                        editor.apply();
 
-                    updateWaktu();
-                    Toast.makeText(MainActivity.this, "Setpoint berhasil di perbaharui", Toast.LENGTH_SHORT).show();
+                        updateWaktu();
+                        Toast.makeText(MainActivity.this, "Setpoint berhasil di perbaharui", Toast.LENGTH_SHORT).show();
+                    } else {
+                        SharedPreferences sP = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+                        text = sP.getString(TEXT, "");
+                        SetPt.setText(text);
+                        SeekTds.setProgress(Integer.parseInt(text) / cStep);
+                        Toast.makeText(MainActivity.this, "Tidak ada koneksi internet!", Toast.LENGTH_SHORT).show();
+                    }
                 });
                 alert.setNegativeButton("Batal", (dialog, which) -> {
                     SharedPreferences sP = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
@@ -132,8 +164,16 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Setpoint batal di perbaharui", Toast.LENGTH_SHORT).show();
                 });
                 alert.show();
+
             }
         });
+
+//        pindahData.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                dataPindah();
+//            }
+//        });
 
         Sensor_Ppm.addValueEventListener(new ValueEventListener() {
             @Override
@@ -141,6 +181,9 @@ public class MainActivity extends AppCompatActivity {
                 String tb_ppm = snapshot.getValue(String.class);
                 SensorPpm.setText(tb_ppm);
                 updateWaktu();
+                ContentValues values = new ContentValues();
+                values.put(DatabaseHelper.COL_PPM, tb_ppm);
+                dbhelp.insertData(values);
             }
 
             @Override
@@ -154,6 +197,9 @@ public class MainActivity extends AppCompatActivity {
                 String tb_ph = snapshot.getValue(String.class);
                 SensorPh.setText(tb_ph);
                 updateWaktu();
+                ContentValues values = new ContentValues();
+                values.put(DatabaseHelper.COL_PH, tb_ph);
+                dbhelp.insertData(values);
             }
 
             @Override
@@ -167,6 +213,9 @@ public class MainActivity extends AppCompatActivity {
                 String tb_suhu = snapshot.getValue(String.class);
                 SensorSuhu.setText(tb_suhu);
                 updateWaktu();
+                ContentValues values = new ContentValues();
+                values.put(DatabaseHelper.COL_SUHU, tb_suhu);
+                dbhelp.insertData(values);
             }
 
             @Override
@@ -192,13 +241,23 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_abmix = snapshot.getValue(String.class);
                 if (tb_abmix.equals("H")) {
-                    PomABMix.setText("ON");
+                    PomABMix.setText(R.string.PompaON);
                     PomABMix.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
+
+                    String pabmixON = (String) PomABMix.getText();
+                    ContentValues valuesON = new ContentValues();
+                    valuesON.put(DatabaseHelper.COL_PABMIX, pabmixON);
+                    dbhelp.insertData(valuesON);
                 } else if (tb_abmix.equals("L")) {
-                    PomABMix.setText("OFF");
+                    PomABMix.setText(R.string.PompaOFF);
                     PomABMix.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
+
+                    String pabmixOFF = (String) PomABMix.getText();
+                    ContentValues valuesOFF = new ContentValues();
+                    valuesOFF.put(DatabaseHelper.COL_PABMIX, pabmixOFF);
+                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -212,13 +271,23 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_air = snapshot.getValue(String.class);
                 if (tb_air.equals("H")) {
-                    PomAir.setText("ON");
+                    PomAir.setText(R.string.PompaON);
                     PomAir.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
+
+                    String pairON = (String) PomAir.getText();
+                    ContentValues valuesON = new ContentValues();
+                    valuesON.put(DatabaseHelper.COL_PAIR, pairON);
+                    dbhelp.insertData(valuesON);
                 } else if (tb_air.equals("L")) {
-                    PomAir.setText("OFF");
+                    PomAir.setText(R.string.PompaOFF);
                     PomAir.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
+
+                    String pairOFF = (String) PomAir.getText();
+                    ContentValues valuesOFF = new ContentValues();
+                    valuesOFF.put(DatabaseHelper.COL_PAIR, pairOFF);
+                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -232,13 +301,23 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_phup = snapshot.getValue(String.class);
                 if (tb_phup.equals("H")) {
-                    PomPhUp.setText("ON");
+                    PomPhUp.setText(R.string.PompaON);
                     PomPhUp.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
+
+                    String pupON = (String) PomPhUp.getText();
+                    ContentValues valuesON = new ContentValues();
+                    valuesON.put(DatabaseHelper.COL_PUP, pupON);
+                    dbhelp.insertData(valuesON);
                 } else if (tb_phup.equals("L")) {
-                    PomPhUp.setText("OFF");
+                    PomPhUp.setText(R.string.PompaOFF);
                     PomPhUp.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
+
+                    String pupOFF = (String) PomPhUp.getText();
+                    ContentValues valuesOFF = new ContentValues();
+                    valuesOFF.put(DatabaseHelper.COL_PUP, pupOFF);
+                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -252,13 +331,23 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String tb_phd = snapshot.getValue(String.class);
                 if (tb_phd.equals("H")) {
-                    PomPhD.setText("ON");
+                    PomPhD.setText(R.string.PompaON);
                     PomPhD.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
+
+                    String pdnON = (String) PomPhD.getText();
+                    ContentValues valuesON = new ContentValues();
+                    valuesON.put(DatabaseHelper.COL_PDN, pdnON);
+                    dbhelp.insertData(valuesON);
                 } else if (tb_phd.equals("L")) {
-                    PomPhD.setText("OFF");
+                    PomPhD.setText(R.string.PompaOFF);
                     PomPhD.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
+
+                    String pdnOFF = (String) PomPhD.getText();
+                    ContentValues valuesOFF = new ContentValues();
+                    valuesOFF.put(DatabaseHelper.COL_PDN, pdnOFF);
+                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -271,7 +360,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateWaktu() {
         Calendar calendar = Calendar.getInstance();
-        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
+//        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
+        @SuppressLint("SimpleDateFormat") DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
         String cDate = df.format(calendar.getTime());
         Waktu.setText(cDate);
 
@@ -297,10 +387,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean isOnline(Context c) {
         ConnectivityManager cm = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
-        if (ni != null && ni.isConnectedOrConnecting())
-            return true;
-        else
-            return false;
+        return ni != null && ni.isConnectedOrConnecting();
     }
 
     public void Set_Visibility_ON() {
