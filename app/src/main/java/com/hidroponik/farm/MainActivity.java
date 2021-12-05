@@ -4,19 +4,15 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -24,10 +20,7 @@ import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -35,12 +28,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.hidroponik.farm.databinding.ActivityMainBinding;
-
-import jxl.Workbook;
-import jxl.WorkbookSettings;
-import jxl.write.Label;
-import jxl.write.WritableSheet;
-import jxl.write.WritableWorkbook;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,8 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView SensorPpm, SensorPh, SensorSuhu, SetPt, PomABMix, PomAir, PomPhUp, PomPhD, Waktu, LUdpt;
     private SeekBar SeekTds;
     private IntentFilter mif;
-    WritableWorkbook workbook;
-
     private final FirebaseDatabase db = FirebaseDatabase.getInstance();
     private final DatabaseReference Sensor_Ppm = db.getReference("ppm_value");
     private final DatabaseReference Sensor_Ph = db.getReference("ph_value");
@@ -100,15 +85,26 @@ public class MainActivity extends AppCompatActivity {
 
         binding.lupdt.setVisibility(View.GONE);
         binding.waktu.setVisibility(View.GONE);
-        if (isOnline(getApplicationContext())) {
+        if(isOnline(getApplicationContext())) {
             text1 = sP.getString(TEXT1, "");
             Waktu.setText(text1);
             Set_Visibility_ON();
             Toast.makeText(MainActivity.this, "Internet tersambung!", Toast.LENGTH_LONG).show();
-        } else {
-            Set_Visibility_OFF();
+        }else {
+            LUdpt.setText("Gagal memperbaharui data!");
             Toast.makeText(MainActivity.this, "Internet terputus!", Toast.LENGTH_LONG).show();
         }
+
+//        if(text1 == null) {
+//            LUdpt.setVisibility(View.INVISIBLE);
+//            Waktu.setVisibility(View.INVISIBLE);
+//        } else {
+//            LUdpt.setVisibility(View.VISIBLE);
+//            Waktu.setVisibility(View.VISIBLE);
+//            updateWaktu();
+//            text1 = sP.getString(TEXT1, "");
+//            Waktu.setText(text1);
+//        }
 
         SeekTds.setMax(cMax / cStep);
         SeekTds.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -282,106 +278,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Gagal membaca data pompa pH down!" + error.toException(), Toast.LENGTH_SHORT).show();
             }
         });
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission
-                (Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-        } else {
-            createExcelSheet();
-        }
-
     }
-
-    void createExcelSheet() {
-        String csvFile = "Log_Sensor.xls";
-        java.io.File file = new java.io.File(Environment.
-                getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + csvFile);
-        WorkbookSettings wbSet = new WorkbookSettings();
-        wbSet.setLocale(new Locale("id", "ID"));
-        try {
-            workbook = Workbook.createWorkbook(file, wbSet);
-            createFirstSheet();
-            // create sheet here
-
-            // close file
-            workbook.write();
-            workbook.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    void updateSheet() {
-        try {
-            List<DataSensor> dataSensorList = new ArrayList<>();
-
-            dataSensorList.add(new DataSensor(
-                    SensorPpm.getText().toString(), SensorPpm.getText().toString(),
-                    SensorPh.getText().toString(), SensorSuhu.getText().toString(),
-                    SetPt.getText().toString(), PomABMix.getText().toString(),
-                    PomAir.getText().toString(), PomPhUp.getText().toString(),
-                    PomPhD.getText().toString()));
-
-            WritableSheet sheet = workbook.getSheet("Sheet1");
-
-            for (int i = 0; i < dataSensorList.size(); i++) {
-                sheet.addCell(new Label(0, i + 1, dataSensorList.get(i).getTm()));
-                sheet.addCell(new Label(1, i + 1, dataSensorList.get(i).getPpm_value()));
-                sheet.addCell(new Label(2, i + 1, dataSensorList.get(i).getPh_value()));
-                sheet.addCell(new Label(3, i + 1, dataSensorList.get(i).getSuhu_value()));
-                sheet.addCell(new Label(4, i + 1, dataSensorList.get(i).getSetpoint_value()));
-                sheet.addCell(new Label(5, i + 1, dataSensorList.get(i).getP_abmix()));
-                sheet.addCell(new Label(6, i + 1, dataSensorList.get(i).getP_air()));
-                sheet.addCell(new Label(7, i + 1, dataSensorList.get(i).getP_phu()));
-                sheet.addCell(new Label(8, i + 1, dataSensorList.get(i).getP_phd()));
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    void createFirstSheet() {
-        try {
-            List<DataSensor> dataSensorList = new ArrayList<>();
-
-            dataSensorList.add(new DataSensor(
-                    SensorPpm.getText().toString(), SensorPpm.getText().toString(),
-                    SensorPh.getText().toString(), SensorSuhu.getText().toString(),
-                    SetPt.getText().toString(), PomABMix.getText().toString(),
-                    PomAir.getText().toString(), PomPhUp.getText().toString(),
-                    PomPhD.getText().toString()));
-
-            WritableSheet sheet = workbook.createSheet("Sheet1", 0);
-
-            sheet.addCell(new Label(0, 0, "Waktu"));
-            sheet.addCell(new Label(1, 0, "PPM"));
-            sheet.addCell(new Label(2, 0, "pH"));
-            sheet.addCell(new Label(3, 0, "Suhu"));
-            sheet.addCell(new Label(4, 0, "Setpoint PPM"));
-            sheet.addCell(new Label(5, 0, "Pom ABMix"));
-            sheet.addCell(new Label(6, 0, "Pom Air"));
-            sheet.addCell(new Label(7, 0, "Pom pH UP"));
-            sheet.addCell(new Label(8, 0, "Pom pH DOWN"));
-
-            for (int i = 0; i < dataSensorList.size(); i++) {
-                sheet.addCell(new Label(0, i + 1, dataSensorList.get(i).getTm()));
-                sheet.addCell(new Label(1, i + 1, dataSensorList.get(i).getPpm_value()));
-                sheet.addCell(new Label(2, i + 1, dataSensorList.get(i).getPh_value()));
-                sheet.addCell(new Label(3, i + 1, dataSensorList.get(i).getSuhu_value()));
-                sheet.addCell(new Label(4, i + 1, dataSensorList.get(i).getSetpoint_value()));
-                sheet.addCell(new Label(5, i + 1, dataSensorList.get(i).getP_abmix()));
-                sheet.addCell(new Label(6, i + 1, dataSensorList.get(i).getP_air()));
-                sheet.addCell(new Label(7, i + 1, dataSensorList.get(i).getP_phu()));
-                sheet.addCell(new Label(8, i + 1, dataSensorList.get(i).getP_phd()));
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
 
     private void updateWaktu() {
         Calendar calendar = Calendar.getInstance();
