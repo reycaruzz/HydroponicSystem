@@ -43,4 +43,5 @@
     <string name="pompa_nph_down">POMPA\npH Down</string>
     <string name="terakhir_update">Terakhir update:</string>
     <string name="_0zero">0</string>
+    <string name="not_connected">Tidak terkoneksi internet!</string>
 </resources>
