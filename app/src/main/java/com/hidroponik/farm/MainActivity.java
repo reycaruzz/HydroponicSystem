@@ -15,7 +15,6 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
@@ -37,24 +36,17 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.hidroponik.farm.databinding.ActivityMainBinding;
 
-import org.apache.poi.hpsf.Util;
-
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-
     ActivityMainBinding binding;
-    public static final String BroadcastStringForAction = "check internet";
-
+    public static final String BroadcastStringForAction = "checkinternet";
     private TextView SensorPpm, SensorPh, SensorSuhu, SetPt, PomABMix, PomAir, PomPhUp, PomPhD, Waktu;
     DatabaseHelper dbhelp;
-    String directory_path = Environment.getExternalStorageDirectory().getPath() + "/Backup/";
     private SeekBar SeekTds;
-    private Button pindahData;
     private IntentFilter mif;
     SQLiteToExcel sto;
-
+    Handler mHandler;
     private final FirebaseDatabase db = FirebaseDatabase.getInstance();
-
     private final DatabaseReference Sensor_Ppm = db.getReference("ppm_value");
     private final DatabaseReference Sensor_Ph = db.getReference("ph_value");
     private final DatabaseReference Sensor_Suhu = db.getReference("suhu_value");
@@ -63,12 +55,10 @@ public class MainActivity extends AppCompatActivity {
     private final DatabaseReference Pom_Air = db.getReference("pom_air");
     private final DatabaseReference Pom_PhUp = db.getReference("pom_phup");
     private final DatabaseReference Pom_PhD = db.getReference("pom_phd");
-
     int cMax = 1400;
     int cStep = 50;
     int cProg;
     long id;
-
     private String text;
     public static final String SHARED_PREFS = "sharedPrefs";
     public static final String TEXT = "text";
@@ -81,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         dbhelp = new DatabaseHelper(this);
         id = getIntent().getLongExtra(DatabaseHelper.COLUMN_ID, 0);
-        File file = new File(directory_path);
+        File file = new File(this.getApplicationContext().getExternalFilesDir(null).toString());
         if (!file.exists()) {
             Log.v("File Created", String.valueOf(file.mkdirs()));
         }
@@ -95,18 +85,15 @@ public class MainActivity extends AppCompatActivity {
         PomPhD = findViewById(R.id.p_phdn);
         SeekTds = findViewById(R.id.seek_ppm);
         Waktu = findViewById(R.id.waktu);
-        pindahData = (Button) findViewById(R.id.btn1);
-
+        Button pindahData = (Button) findViewById(R.id.btn1);
         SharedPreferences sP = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         text = sP.getString(TEXT, "0");
         SetPt.setText(text);
         SeekTds.setProgress((!text.equals("") ? Integer.parseInt(text) : 0) / cStep);
-
         mif = new IntentFilter();
         mif.addAction(BroadcastStringForAction);
         Intent sIntent = new Intent(this, netService.class);
         startService(sIntent);
-
         binding.lupdt.setVisibility(View.GONE);
         binding.waktu.setVisibility(View.GONE);
         if (isOnline(getApplicationContext())) {
@@ -122,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, "Internet terputus!", Toast.LENGTH_LONG).show();
             Log.d(TAG, "Internet terputus");
         }
-
         SeekTds.setMax(cMax / cStep);
         SeekTds.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -172,35 +158,12 @@ public class MainActivity extends AppCompatActivity {
                 alert.show();
             }
         });
-
-        pindahData.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                dataPindah();
-            }
-        });
-
+        pindahData.setOnClickListener(v -> dataPindah());
         updateData();
-
-        final Handler postdb = new Handler();
-        postdb.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                ContentValues values = new ContentValues();
-                values.put(DatabaseHelper.COLUMN_PPM, String.valueOf(SensorPpm.getText()));
-                values.put(DatabaseHelper.COLUMN_PH, String.valueOf(SensorPh.getText()));
-                values.put(DatabaseHelper.COLUMN_SUHU, String.valueOf(SensorPpm.getText()));
-                values.put(DatabaseHelper.COLUMN_SETPOINT, String.valueOf(SetPt.getText()));
-                values.put(DatabaseHelper.COLUMN_PABMIX, String.valueOf(PomABMix.getText()));
-                values.put(DatabaseHelper.COLUMN_PAIR, String.valueOf(PomAir.getText()));
-                values.put(DatabaseHelper.COLUMN_PUP, String.valueOf(PomPhUp.getText()));
-                values.put(DatabaseHelper.COLUMN_PDN, String.valueOf(PomPhD.getText()));
-                dbhelp.insertData(values);
-            }
-        },5000L);
-
-
+        this.mHandler = new Handler();
+        runnable.run();
     }
+
     public void updateData() {
         Sensor_Ppm.addValueEventListener(new ValueEventListener() {
             @Override
@@ -208,9 +171,6 @@ public class MainActivity extends AppCompatActivity {
                 String tb_ppm = snapshot.getValue(String.class);
                 SensorPpm.setText(tb_ppm);
                 updateWaktu();
-                ContentValues values = new ContentValues();
-                values.put(DatabaseHelper.COLUMN_PPM, tb_ppm);
-                dbhelp.insertData(values);
             }
 
             @Override
@@ -224,9 +184,6 @@ public class MainActivity extends AppCompatActivity {
                 String tb_ph = snapshot.getValue(String.class);
                 SensorPh.setText(tb_ph);
                 updateWaktu();
-                ContentValues values = new ContentValues();
-                values.put(DatabaseHelper.COLUMN_PH, tb_ph);
-                dbhelp.insertData(values);
             }
 
             @Override
@@ -240,9 +197,6 @@ public class MainActivity extends AppCompatActivity {
                 String tb_suhu = snapshot.getValue(String.class);
                 SensorSuhu.setText(tb_suhu);
                 updateWaktu();
-                ContentValues values = new ContentValues();
-                values.put(DatabaseHelper.COLUMN_SUHU, tb_suhu);
-                dbhelp.insertData(values);
             }
 
             @Override
@@ -271,20 +225,10 @@ public class MainActivity extends AppCompatActivity {
                     PomABMix.setText(R.string.PompaON);
                     PomABMix.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
-
-                    String pabmixON = (String) PomABMix.getText();
-                    ContentValues valuesON = new ContentValues();
-                    valuesON.put(DatabaseHelper.COLUMN_PABMIX, pabmixON);
-                    dbhelp.insertData(valuesON);
                 } else if (tb_abmix.equals("L")) {
                     PomABMix.setText(R.string.PompaOFF);
                     PomABMix.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
-
-                    String pabmixOFF = (String) PomABMix.getText();
-                    ContentValues valuesOFF = new ContentValues();
-                    valuesOFF.put(DatabaseHelper.COLUMN_PABMIX, pabmixOFF);
-                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -301,20 +245,10 @@ public class MainActivity extends AppCompatActivity {
                     PomAir.setText(R.string.PompaON);
                     PomAir.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
-
-                    String pairON = (String) PomAir.getText();
-                    ContentValues valuesON = new ContentValues();
-                    valuesON.put(DatabaseHelper.COLUMN_PAIR, pairON);
-                    dbhelp.insertData(valuesON);
                 } else if (tb_air.equals("L")) {
                     PomAir.setText(R.string.PompaOFF);
                     PomAir.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
-
-                    String pairOFF = (String) PomAir.getText();
-                    ContentValues valuesOFF = new ContentValues();
-                    valuesOFF.put(DatabaseHelper.COLUMN_PAIR, pairOFF);
-                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -331,20 +265,10 @@ public class MainActivity extends AppCompatActivity {
                     PomPhUp.setText(R.string.PompaON);
                     PomPhUp.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
-
-                    String pupON = (String) PomPhUp.getText();
-                    ContentValues valuesON = new ContentValues();
-                    valuesON.put(DatabaseHelper.COLUMN_PUP, pupON);
-                    dbhelp.insertData(valuesON);
                 } else if (tb_phup.equals("L")) {
                     PomPhUp.setText(R.string.PompaOFF);
                     PomPhUp.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
-
-                    String pupOFF = (String) PomPhUp.getText();
-                    ContentValues valuesOFF = new ContentValues();
-                    valuesOFF.put(DatabaseHelper.COLUMN_PUP, pupOFF);
-                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -361,20 +285,10 @@ public class MainActivity extends AppCompatActivity {
                     PomPhD.setText(R.string.PompaON);
                     PomPhD.setTextColor(Color.rgb(0, 255, 0));
                     updateWaktu();
-
-                    String pdnON = (String) PomPhD.getText();
-                    ContentValues valuesON = new ContentValues();
-                    valuesON.put(DatabaseHelper.COLUMN_PDN, pdnON);
-                    dbhelp.insertData(valuesON);
                 } else if (tb_phd.equals("L")) {
                     PomPhD.setText(R.string.PompaOFF);
                     PomPhD.setTextColor(Color.rgb(255, 0, 0));
                     updateWaktu();
-
-                    String pdnOFF = (String) PomPhD.getText();
-                    ContentValues valuesOFF = new ContentValues();
-                    valuesOFF.put(DatabaseHelper.COLUMN_PDN, pdnOFF);
-                    dbhelp.insertData(valuesOFF);
                 }
             }
 
@@ -386,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void dataPindah() {
-        sto = new SQLiteToExcel(getApplicationContext(), DatabaseHelper.DATABASE_NAME, directory_path);
+        sto = new SQLiteToExcel(getApplicationContext(), "data_sensor", this.getApplicationContext().getExternalFilesDir(null).toString());
         sto.exportAllTables("LogSensor.xls", new SQLiteToExcel.ExportListener() {
             @Override
             public void onStart() {
@@ -420,6 +334,22 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    private final Runnable runnable = new Runnable() {
+        public void run() {
+            ContentValues values = new ContentValues();
+            MainActivity.this.mHandler.postDelayed(runnable, 1000);
+            values.put(DatabaseHelper.COLUMN_PPM, String.valueOf(SensorPpm.getText()));
+            values.put(DatabaseHelper.COLUMN_PH, String.valueOf(SensorPh.getText()));
+            values.put(DatabaseHelper.COLUMN_SUHU, String.valueOf(SensorPpm.getText()));
+            values.put(DatabaseHelper.COLUMN_SETPOINT, String.valueOf(SetPt.getText()));
+            values.put(DatabaseHelper.COLUMN_PABMIX, String.valueOf(PomABMix.getText()));
+            values.put(DatabaseHelper.COLUMN_PAIR, String.valueOf(PomAir.getText()));
+            values.put(DatabaseHelper.COLUMN_PUP, String.valueOf(PomPhUp.getText()));
+            values.put(DatabaseHelper.COLUMN_PDN, String.valueOf(PomPhD.getText()));
+            dbhelp.insertData(values);
+//            Log.d(TAG, "postdb->" + values);
+        }
+    };
     public BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -427,6 +357,8 @@ public class MainActivity extends AppCompatActivity {
                 if (intent.getStringExtra("online_status").equals("true")) {
                     Set_Visibility_ON();
                 } else {
+                    Waktu.setText(R.string.not_connected);
+                    Toast.makeText(MainActivity.this, "Internet terputus!", Toast.LENGTH_LONG).show();
                     Set_Visibility_OFF();
                 }
             }
@@ -453,17 +385,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestart() {
         super.onRestart();
         registerReceiver(mReceiver, mif);
+        runnable.run();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(mReceiver);
+        mHandler.removeCallbacks(runnable);
+        finish();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         registerReceiver(mReceiver, mif);
+        runnable.run();
     }
 }

@@ -5,19 +5,21 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"
-        tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        android:requestLegacyExternalStorage="true"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
         android:allowBackup="true"
+        android:appCategory="productivity"
         android:icon="@drawable/asset_1"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/asset_3"
-        android:appCategory="productivity"
         android:logo="@drawable/asset_1"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@drawable/asset_3"
         android:supportsRtl="true"
         android:theme="@style/Theme.HydroponicSystem"
         tools:ignore="AllowBackup"
@@ -38,11 +40,13 @@
             android:name=".MainActivity"
             android:configChanges="orientation"
             android:exported="true"
+            android:requestLegacyExternalStorage="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.HydroponicSystem"
             tools:ignore="LockedOrientationActivity" />
 
-        <service android:name=".netService"
+        <service
+            android:name=".netService"
             android:enabled="true"
             android:exported="true"
             tools:ignore="ExportedService" />

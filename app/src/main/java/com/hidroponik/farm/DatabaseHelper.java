@@ -13,7 +13,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DatabaseHelper";
     public static final int DATABASE_VERSION = 3;
-    public static final String DATABASE_NAME = "data_sensor.db";
+    public static final String DATABASE_NAME = "data_sensor";
     public static final String DATABASE_TABLE = "log_sensor";
     public static final String COLUMN_ID = "ID";
     public static final String COLUMN_TIMESTAMP = "TIMESTAMP";
@@ -33,7 +33,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db = getWritableDatabase();
         db = getReadableDatabase();
         db.setLocale(new Locale("id", "ID"));
-        Log.i(TAG, "Database: " + getDatabaseName() + "Version: " + db.getVersion());
+//        Log.i(TAG, "Database: " + getDatabaseName() + "Version: " + db.getVersion());
     }
 
     // CREATING TABLES
@@ -52,7 +52,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         + COLUMN_PUP + " TEXT,"
                         + COLUMN_PDN + " TEXT)";
         db.execSQL(query);
-        Log.i(TAG, "onCreate");
+//        Log.i(TAG, "onCreate");
     }
 
     @Override
@@ -67,7 +67,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void insertData(ContentValues values) {
         db.insert(DATABASE_TABLE, null, values);
-        Log.i(TAG, "insertData: " + DATABASE_TABLE + values);
+//        Log.i(TAG, "insertData: " + DATABASE_TABLE + values);
     }
 
 }
